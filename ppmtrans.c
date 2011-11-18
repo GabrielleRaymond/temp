@@ -127,7 +127,6 @@ void applyRotate(int x, int y, A2 array2, A2Methods_Object *ptr, void *cl)
 {
     closure cltemp = cl;
     struct Pnm_rgb * temp;
-    temp = NULL;
     struct Pnm_rgb * ptr_pix= ptr;   
 
     switch(cltemp->rotation)

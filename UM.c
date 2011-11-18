@@ -166,7 +166,7 @@ static void loadVal(UM_T UM, UMinstruction word){
 static T load(FILE *fp) 
 {
     Seq_T instructions = Seq_new(1024);
-    uint64_t word64 = 0;
+    uint64_t word64;
     UMinstruction *word32;
     int64_t toAdd;
     int counter = 0;

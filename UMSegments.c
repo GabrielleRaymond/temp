@@ -22,14 +22,12 @@ T UMSegs_new(int allocSize){
     segmentID *segID;
     UMSegs->segments = UArray_new(allocSize, sizeof(ptr));
     UMSegs->seqUnmapped = Seq_new(allocSize);
-    UArray_T segs = UMSegs->segments;
-    Seq_T seq = UMSegs->seqUnmapped;
     for(int i = 0; i < allocSize; i++) {
-        ptr = UArray_at(segs, i);
+        ptr = UArray_at(UMSegs->segments, i);
         *ptr = NULL;
         NEW(segID);
         *segID = i;
-        Seq_addhi(seq, segID);
+        Seq_addhi(UMSegs->seqUnmapped, segID);
     }
     UMSegs->size = allocSize;
     return UMSegs;

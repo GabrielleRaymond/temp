@@ -167,6 +167,7 @@ static T load(FILE *fp)
 {
     Seq_T instructions = Seq_new(1024);
     uint64_t word64;
+    word64 = 0;
     UMinstruction *word32;
     int64_t toAdd;
     int counter = 0;

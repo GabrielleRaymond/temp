@@ -214,15 +214,8 @@ static T load(FILE *fp)
     return UM;
 }
 
-static inline void instructionLoop(UM_T UM) { //change to segment 0
-    enum OP opcode;
-    UMinstruction instruction;
-    do{
-
-        //instruction = UArray_at(*(UM->seg0), (int)UM->progCount);
-        instruction = UMSegs_getWord(UM->mem, 0, UM->progCount);
-        opcode = (enum OP) ((instruction >> 28) & (uint32_t)15);
-        //opcode = (enum OP)Bitpack_getu(instruction, 4, 28);
+static inline int instructionLoop(UM_T UM, enum OP opcode, UMinstruction
+        instruction) { //change to segment 0
         switch(opcode) {
             case cMov:
                 condMove(UM, instruction);
@@ -272,14 +265,22 @@ static inline void instructionLoop(UM_T UM) { //change to segment 0
         }
         if(opcode != loadP)
             UM->progCount++;
-    }   while(opcode != end);
+        if(opcode == end)
+            return 0;
+        return 1;
 } 
 
 
 /* Carries out instructions and iterates the progCount until Halt is called */
 void run(FILE *fp){
     UM_T UM = load(fp);
-    instructionLoop(UM);
+    UMinstruction instruction;
+    enum OP opcode;
+    do {  
+        instruction = UMSegs_getWord(UM->mem, 0, UM->progCount);
+        opcode = (enum OP) ((instruction >> 28) & (uint32_t)15);
+    } while(instructionLoop(UM, opcode, instruction) != 0);
+
    /* enum OP opcode;
     UMinstruction instruction;
     do{

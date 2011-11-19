@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include "segment.h"
 #include "UMSegments.h"
+#include "segment.h"
 #include "assert.h"
 #include "mem.h"
 #include "uarray.h"

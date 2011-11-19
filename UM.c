@@ -15,7 +15,7 @@ enum OP { cMov = 0, sLoad, sStore, add, mult, divi, nand, end, mapS,
 
 struct T {
     UMSegs_T mem;
-    //Seg_T *seg0;
+    Seg_T seg0;
     regNum regs[8];
     instructPtr progCount;
 };
@@ -148,7 +148,9 @@ static inline void loadPro(UM_T UM, UMinstruction word){
             newWord = Seg_get(newProg, i);
             UMSegs_putWord(UM->mem, 0, i, newWord);
         }
-        Seg_free(&newProg);
+        Seg_free(&newProg); 
+        Seg_free(&(UM->seg0)); 
+        UM->seg0 = UMSegs_getSeg(UM->mem, 0);
     }
     UM->progCount = UM->regs[R.rC];
 }
@@ -201,7 +203,7 @@ static T load(FILE *fp)
     }
 
     // Initialize pointer to segment 0 CHECK
-    // *(UM->seg0) = UMSegs_getSeg(UM->mem, 0);
+    UM->seg0 = UMSegs_getSeg(UM->mem, 0);
     
     // Initialize registers 
     for(regNum i = 0; i < 8; i++){
@@ -276,8 +278,9 @@ void run(FILE *fp){
     UM_T UM = load(fp);
     UMinstruction instruction;
     enum OP opcode;
+    //Seg_T zero = UM->seg0;
     do {  
-        instruction = UMSegs_getWord(UM->mem, 0, UM->progCount);
+        instruction = Seg_get(UM->seg0, UM->progCount);
         opcode = (enum OP) ((instruction >> 28) & (uint32_t)15);
     } while(instructionLoop(UM, opcode, instruction) != 0);
 

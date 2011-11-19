@@ -7,7 +7,7 @@
 #ifndef _SEG_INCLUDE
 #define _SEG_INCLUDE
 #define T Seg_T
-typedef struct T* T;
+typedef struct T *T;
 typedef uint32_t word32;
 
 /* Checked runtime error if the bounds length > 0 and offset in [0, length) are

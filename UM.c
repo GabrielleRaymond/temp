@@ -33,17 +33,26 @@ struct RegAndVal{
 static ThreeRegs unpackThreeRegs(UMinstruction word)
 {
     ThreeRegs inUse;
+    inUse.rA = (word >> 6) & (uint32_t)7;
+    inUse.rB = (word >> 3) & (uint32_t)7;
+    inUse.rC = word & (uint32_t)7;
+    /*
     inUse.rA = Bitpack_getu(word, 3, 6);
     inUse.rB = Bitpack_getu(word, 3, 3);
     inUse.rC = Bitpack_getu(word, 3, 0);
+    */
     return inUse;
 }
 
 static struct RegAndVal unpackValue(UMinstruction word)
 {
     RegAndVal toStore;
+    toStore.rA = (word >> 25) & (uint32_t)7;
+    toStore.val = word & (uint32_t)33554431;
+    /*
     toStore.rA = Bitpack_getu(word, 3, 25);
     toStore.val = Bitpack_getu(word, 25, 0);
+    */
     return toStore;
 }  
 
@@ -221,7 +230,8 @@ void run(FILE *fp){
     do{
 
         instruction = UMSegs_getWord(UM->mem, 0, UM->progCount);
-        opcode = (enum OP)Bitpack_getu(instruction, 4, 28);
+        opcode = (enum OP) ((instruction >> 28) & (uint32_t)15);
+        //opcode = (enum OP)Bitpack_getu(instruction, 4, 28);
         switch(opcode) {
             case cMov:
                 condMove(UM, instruction);

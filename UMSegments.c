@@ -22,12 +22,14 @@ T UMSegs_new(int allocSize){
     segmentID *segID;
     UMSegs->segments = UArray_new(allocSize, sizeof(ptr));
     UMSegs->seqUnmapped = Seq_new(allocSize);
+    UArray_T segs = UMSegs->segments;
+    Seq_T seq = UMSegs->seqUnmapped;
     for(int i = 0; i < allocSize; i++) {
-        ptr = UArray_at(UMSegs->segments, i);
+        ptr = UArray_at(segs, i);
         *ptr = NULL;
         NEW(segID);
         *segID = i;
-        Seq_addhi(UMSegs->seqUnmapped, segID);
+        Seq_addhi(seq, segID);
     }
     UMSegs->size = allocSize;
     return UMSegs;
@@ -47,9 +49,12 @@ void UMSegs_free(T *ptr){
             UMSegs_unmapSeg(*ptr, i); 
     }
     UArray_free(&((*ptr)->segments));
-    while(Seq_length((*ptr)->seqUnmapped)!=0){
-        segID = Seq_remhi((*ptr)->seqUnmapped);
+    Seq_T seq = (*ptr)->seqUnmapped;
+    length = Seq_length(seq);
+    while(length != 0){
+        segID = Seq_remhi(seq);
         FREE(segID);
+        length--;
     }
     Seq_free(&((*ptr)->seqUnmapped));
     FREE(*ptr);

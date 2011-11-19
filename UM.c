@@ -216,8 +216,9 @@ static T load(FILE *fp)
     return UM;
 }
 
+/* Carries out a single instruction  */
 static inline int instructionLoop(UM_T UM, enum OP opcode, UMinstruction
-        instruction) { //change to segment 0
+        instruction) { 
         switch(opcode) {
             case cMov:
                 condMove(UM, instruction);
@@ -268,80 +269,19 @@ static inline int instructionLoop(UM_T UM, enum OP opcode, UMinstruction
         if(opcode != loadP)
             UM->progCount++;
         if(opcode == end)
-            return 0;
+            return end;
         return 1;
 } 
-
 
 /* Carries out instructions and iterates the progCount until Halt is called */
 void run(FILE *fp){
     UM_T UM = load(fp);
     UMinstruction instruction;
     enum OP opcode;
-    //Seg_T zero = UM->seg0;
     do {  
         instruction = Seg_get(UM->seg0, UM->progCount);
         opcode = (enum OP) ((instruction >> 28) & (uint32_t)15);
-    } while(instructionLoop(UM, opcode, instruction) != 0);
-
-   /* enum OP opcode;
-    UMinstruction instruction;
-    do{
-
-        //instruction = UArray_at(*(UM->seg0), (int)UM->progCount);
-        instruction = UMSegs_getWord(UM->mem, 0, UM->progCount);
-        opcode = (enum OP) ((instruction >> 28) & (uint32_t)15);
-        //opcode = (enum OP)Bitpack_getu(instruction, 4, 28);
-        switch(opcode) {
-            case cMov:
-                condMove(UM, instruction);
-                break;
-            case sLoad:
-                segLoad(UM, instruction);
-                break;
-            case sStore:
-                segStore(UM, instruction);
-                break;
-            case add:
-                addition(UM, instruction);
-                break;
-            case mult:
-                multiplication(UM, instruction);
-                break;
-            case divi:
-                divide(UM, instruction);
-                break;
-            case nand:
-                NAND(UM, instruction);
-                break;
-            case end:
-                halt(UM, instruction);
-                break;
-            case mapS:
-                mapSeg(UM, instruction);
-                break;
-            case unmapS:
-                unmapSeg(UM, instruction);
-                break;
-            case out:
-                output(UM, instruction);
-                break;
-            case in:
-                input(UM, instruction);
-                break;
-            case loadP:
-                loadPro(UM, instruction);
-                break;
-            case loadV:
-                loadVal(UM, instruction);
-                break;
-            default:
-                exit(1);
-                break;
-        }
-        if(opcode != loadP)
-              UM->progCount++;
-    }   while(opcode != end); */
+    } while((enum OP)instructionLoop(UM, opcode, instruction) != end);
     FREE(UM);
 }
 

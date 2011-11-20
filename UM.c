@@ -112,7 +112,6 @@ static inline void unmapSeg(UM_T UM, UMinstruction word){
 /* Prints the character stored in $rC */
 static inline void output(UM_T UM, UMinstruction word){
     ThreeRegs R = unpackThreeRegs(word);
-    assert(R.rC < (regNum)8 &&  UM->regs[R.rC] <= 255);
     printf("%c", UM->regs[R.rC]);
 }
 
@@ -142,8 +141,7 @@ static inline void loadPro(UM_T UM, UMinstruction word){
         UMSegs_unmapSeg(UM->mem, (segmentID)0);
         length = Seg_length(newProg);
         segID = UMSegs_mapSeg(UM->mem, length);
-        assert(segID == (segmentID)0);
-
+        
         for(int i = 0; i < length; i++){
             newWord = Seg_get(newProg, i);
             UMSegs_putWord(UM->mem, 0, i, newWord);
@@ -158,7 +156,6 @@ static inline void loadPro(UM_T UM, UMinstruction word){
 /* Loads val parsed from the word and stores it in the determined reg */
 static inline void loadVal(UM_T UM, UMinstruction word){
     RegAndVal V = unpackValue(word); 
-    assert(V.rA < (regNum)8);
     UM->regs[V.rA] = V.val; 
 }
 
@@ -189,7 +186,6 @@ static T load(FILE *fp)
     NEW(UM);
     UM->mem = UMSegs_new(1024);
     segID = UMSegs_mapSeg(UM->mem, Seq_length(instructions));
-    assert(segID == (segmentID)0);
    
     int counter = 0;
     int wordsLeft2Add = Seq_length(instructions);

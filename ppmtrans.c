@@ -2,7 +2,6 @@
 #include <string.h>
 #include <stdlib.h>
 
-#include "assert.h"
 #include "a2methods.h"
 #include "a2plain.h"
 #include "a2blocked.h"
@@ -11,26 +10,26 @@
 
 #define A2 A2Methods_UArray2
 
+enum transformation {R0 = 0, R90 = 90, R180 = 180, R270 = 270, FH = 1, FV = 2,
+    TX = 3 }; 
+
 void applyRotate(int x, int y, A2 array2, A2Methods_Object *ptr, void *cl); 
 
 typedef struct closure * closure;
 struct closure{
     A2Methods_T  methods;
     Pnm_ppm * destination;
-    int rotation;
+    enum transformation trans;
 };
 
 int main(int argc, char *argv[]) {
-    int rotation = 0;
+    int trans = R0;
     FILE * fp = NULL;
 
     A2Methods_T methods = uarray2_methods_plain; // default to UArray2 methods
-    assert(methods);
     A2Methods_mapfun *map = methods->map_default; // default to best map
-    assert(map);
 #define SET_METHODS(METHODS, MAP, WHAT) do { \
     methods = (METHODS); \
-    assert(methods); \
     map = methods->MAP; \
     if (!map) { \
         fprintf(stderr, "%s does not support " WHAT "mapping\n", argv[0]); \
@@ -47,22 +46,17 @@ int main(int argc, char *argv[]) {
         } else if (!strcmp(argv[i], "-block-major")) {
             SET_METHODS(uarray2_methods_blocked, map_block_major,"block-major");
         } else if (!strcmp(argv[i], "-rotate")) {
-            assert(i + 1 < argc);
             char *endptr;
-            rotation = strtol(argv[++i], &endptr, 10);
-            assert(*endptr == '\0'); // parsed all correctly
-            assert(rotation == 0   || rotation == 90
-                    || rotation == 180 || rotation == 270); 
+            trans = (enum transformation)strtol(argv[++i], &endptr, 10);
         } else if(!strcmp(argv[i], "-flip")) {  
-            assert(i + 1 < argc);
             if(!strcmp(argv[++i], "horizontal"))
-                rotation = 1;
+                trans = FH;
             else if(!strcmp(argv[i], "vertical"))
-                rotation = 2;
+                trans = FV;
             else
                 fprintf(stderr, "%s:unknown option '%s'\n", argv[0], argv[i+1]);
         }else if(!strcmp(argv[i], "-transpose")){
-            rotation=3;
+            trans = TX;
         }else if (*argv[i] == '-') {
             fprintf(stderr, "%s: unknown option '%s'\n", argv[0], argv[i]);
             exit(1);
@@ -90,13 +84,13 @@ if(fp == NULL) //Case: input from stdin
     destImage->methods = methods;
     destImage->denominator=originalImage->denominator;
  
-    //Sets rotation specific variables
-    if(rotation==90 || rotation==270){
+    //Sets transformation specific variables
+    if(trans == R90 || trans == R270){
         destImage->width = methods->height(originalImage->pixels);
         destImage->height = methods->width(originalImage->pixels);
     }
-    if(rotation==180 || rotation == 0 || rotation == 1 || \
-            rotation == 2 || rotation == 3) {
+    if(trans == R180 || trans == R0 || trans == FH || \
+            trans == FV || trans == TX) {
         destImage->width = methods->width(originalImage->pixels);
         destImage->height = methods->height(originalImage->pixels);
     }     
@@ -104,12 +98,12 @@ if(fp == NULL) //Case: input from stdin
     destImage->pixels = methods->new(destImage->width, destImage->height,
             methods->size(originalImage->pixels));
 
-    //rotation of image
+    //transformation of image
     closure cl;
     NEW(cl);
     cl->methods = methods;
     cl->destination = &destImage;
-    cl->rotation = rotation;
+    cl->trans = trans;
     map(originalImage->pixels, applyRotate, cl);
 
     //writing file and freeing memory
@@ -130,35 +124,35 @@ void applyRotate(int x, int y, A2 array2, A2Methods_Object *ptr, void *cl)
     temp = NULL;
     struct Pnm_rgb * ptr_pix= ptr;   
 
-    switch(cltemp->rotation)
+    switch(cltemp->trans)
     {
-        case 0:
+        case R0:
             temp = cltemp->methods->at((*(cltemp->destination))->pixels, 
                     x,y);
             break;
-        case 1: // Flip horizontal 
+        case FH: // Flip horizontal 
             temp = cltemp->methods->at((*(cltemp->destination))->pixels, 
                     (cltemp->methods->width(array2) - x - 1) ,y);
             break;
-        case 2: // Flip vertical 
+        case FV: // Flip vertical 
             temp = cltemp->methods->at((*(cltemp->destination))->pixels, 
                     x ,cltemp->methods->height(array2) - y - 1);
             break;
-        case 3: // Transpose
+        case TX: // Transpose
             temp = cltemp->methods->at((*(cltemp->destination))->pixels, 
                    cltemp->methods->width(array2) - x - 1, 
                    cltemp->methods->height(array2) - y - 1);
             break;
-        case 90:
+        case R90:
             temp = cltemp->methods->at((*(cltemp->destination))->pixels, 
                     (cltemp->methods->height(array2) - y - 1) ,x);
             break;
-        case 180:
+        case R180:
             temp = cltemp->methods->at((*(cltemp->destination))->pixels, 
                     (cltemp->methods->width(array2) - x - 1) , 
                     (cltemp->methods->height(array2) - y - 1));
             break;
-        case 270:
+        case R270:
             temp = cltemp->methods->at((*(cltemp->destination))->pixels, 
                     y, cltemp->methods->width(array2) - x - 1);
             break;

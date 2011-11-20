@@ -15,7 +15,6 @@ struct T{
  * (index) in UArray points to NULL, and seqUnmapped holds all unmapped IDS
  */
 T UMSegs_new(int allocSize){
-    assert(allocSize >= 0);
     T UMSegs;
     NEW(UMSegs);
     Seg_T *ptr;
@@ -37,8 +36,6 @@ T UMSegs_new(int allocSize){
 
 /* Frees all memory allocated to the segments */
 void UMSegs_free(T *ptr){
-    assert(ptr!=NULL);
-    assert(*ptr!=NULL);
     Seg_T **SegPtr;
     segmentID * segID;
     int length;
@@ -83,12 +80,7 @@ uint32_t UMSegs_mapSeg(T segments, int length){
     segmentID segID;
     /* If there are no unmapped segIDs, resize */
     if(Seq_length(segments->seqUnmapped) == 0) {
-        TRY     
             UArray_resize(segments->segments, 2*segments->size);
-        ELSE 
-            fprintf(stderr, "Resource exhaustion.\n");
-        exit(1);
-        END_TRY;   
         for(int i = segments->size; i < 2*segments->size; i++) {
             NEW(segIDptr);
             *segIDptr = i;           
@@ -106,8 +98,6 @@ uint32_t UMSegs_mapSeg(T segments, int length){
     seg = UArray_at(segments->segments, (int)segID);
     NEW(*seg);
     **seg = Seg_new(length);
-    assert(seg != NULL);
-    assert(*seg != NULL);
     return segID;
 }
 
@@ -128,7 +118,6 @@ Seg_T UMSegs_getSeg(T segments, uint32_t segID){
      Seg_T **seg;
      Seg_T segDup;
      seg = UArray_at(segments->segments, (int)segID);
-     assert(seg!=NULL && *seg!=NULL);
      int length = Seg_length(**seg);
      segDup = Seg_new(length);
      for(int i = 0; i < length; i++){

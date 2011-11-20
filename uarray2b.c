@@ -1,6 +1,5 @@
 #include <stdio.h>
 #include "mem.h"
-#include "assert.h"
 #include "uarray2.h"
 #include "uarray2b.h"
 #include "uarray.h"
@@ -59,7 +58,6 @@ static void applyFree(UArray2_T UArray2, int col, int row, void *cl)
  */
 extern T UArray2b_new(int width, int height, int size, int blocksize) 
 {
-        assert(width > 0 && height > 0 && size > 0);    
         T UArray2b;
         NEW(UArray2b);
         
@@ -80,7 +78,6 @@ extern T UArray2b_new(int width, int height, int size, int blocksize)
  */
 extern T UArray2b_new_64K_block(int width, int height, int size) 
 {
-        assert(size > 0);
         int blocksize;
         if(size < 65536) 
                 blocksize = (int)sqrt(65536/size); 
@@ -92,7 +89,6 @@ extern T UArray2b_new_64K_block(int width, int height, int size)
 /* Frees all data stored in the UArray2b_T*/
 extern void UArray2b_free(T *array2b)
 {
-        assert(array2b != NULL && *array2b != NULL);
         UArray2_map_row_major((*array2b)->UArray2, applyFree, NULL);
         UArray2_free(&((*array2b)->UArray2));
         FREE(*array2b);
@@ -108,9 +104,6 @@ extern int UArray2b_blocksize(T array2b) { return array2b->blocksize; }
 
 extern void *UArray2b_at(T array2b, int x, int y)
 {
-        assert(array2b != NULL);
-        assert(x >= 0 && x < UArray2b_width(array2b));
-        assert(y >=0 && y < UArray2b_height(array2b));
         int blocksize = UArray2b_blocksize(array2b);    
         int blockX = x / blocksize;
         int blockY = y / blocksize;
@@ -125,9 +118,6 @@ extern void *UArray2b_at(T array2b, int x, int y)
 extern void UArray2b_map(T uarray2b, void apply(int x, int y, 
                         T array2b, void *elem, void *cl), void *cl)
 {
-    assert(uarray2b != NULL);
-        assert(uarray2b->UArray2 !=NULL);
-        assert(apply);
         UArray_T * temp = NULL;
         int rowcoord;
         int colcoord;

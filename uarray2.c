@@ -1,7 +1,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <uarray.h>
-#include <assert.h>
 #include <string.h>
 #include "uarray2.h"
 
@@ -9,8 +8,8 @@
 
 struct T
 {
-    UArray_T uarray;
-    int width;
+    Pnm_ppm array[];
+    int length;
 };
 
 // INV: UArray_length(ua->uarray) == ua->width * height of ua2
@@ -47,7 +46,6 @@ T UArray2_new(int width, int height, int size)
 {
     T uarray2;
     uarray2 = malloc((long)sizeof * uarray2);
-    
     uarray2->uarray = UArray_new(width*height, size);
     uarray2->width = width;
     return uarray2;
@@ -83,8 +81,6 @@ int UArray2_size(T uarray2)
     
 void* UArray2_at(T uarray2, int row, int column)
 {
-    assert(row < UArray2_height(uarray2) && column < UArray2_width(uarray2));
-    assert(row >= 0 && column >= 0);
     return UArray_at(uarray2->uarray, index_of_cr(uarray2, column, row));    
 }
 
@@ -92,11 +88,8 @@ void UArray2_map_row_major(T uarray2,
     void apply(T uarray2, int col, int row, void* cl), 
     void* cl)
 {
-    assert(uarray2);
-    assert(uarray2->uarray);
-    assert(apply);
-    
-    for (int i = 0; i < UArray2_area(uarray2); i++)
+    int area = UArray2_area(uarray2);
+    for (int i = 0; i < area; i++)
     {
 	struct cr temp = cr_of_index(uarray2, i);
         int row = temp.row;
@@ -109,16 +102,13 @@ void UArray2_map_column_major(T uarray2,
     void apply(T uarray2, int col, int row, void* cl), 
     void* cl)
 {
-    assert(uarray2);
-    assert(uarray2->uarray);
-    assert(apply);
-    
-    for (int column = 0; column < UArray2_width(uarray2); column++)
-        for (int row = 0; row < UArray2_height(uarray2); row++)
+    int w = UArray2_width(uarray2);
+    int h = UArray2_height(uarray2);
+    for (int column = 0; column < w; column++)
+        for (int row = 0; row < h; row++)
         {
             apply(uarray2, column, row, cl);
         }    
 }
-
 
 #undef T

@@ -20,109 +20,69 @@ struct T {
     instructPtr progCount;
 };
 
-struct ThreeRegs{
-    regNum rA;
-    regNum rB;
-    regNum rC;
-};
-
-struct RegAndVal{
-    regNum rA;
-    regVal val;
-};
-
-static inline ThreeRegs unpackThreeRegs(UMinstruction word)
-{
-    ThreeRegs inUse;
-    inUse.rA = (word >> 6) & (uint32_t)7;
-    inUse.rB = (word >> 3) & (uint32_t)7;
-    inUse.rC = word & (uint32_t)7;
-    return inUse;
-}
-
-static inline struct RegAndVal unpackValue(UMinstruction word)
-{
-    RegAndVal toStore;
-    toStore.rA = (word >> 25) & (uint32_t)7;
-    toStore.val = word & (uint32_t)33554431;
-    return toStore;
-}  
-
 /* $rA:= $rB if $rC != 0 */ 
-static inline void condMove(UM_T UM, UMinstruction word){
-    ThreeRegs R = unpackThreeRegs(word);
-    if(UM->regs[R.rC]!= (regNum)0)
-        UM->regs[R.rA] = UM->regs[R.rB];
+static inline void condMove(UM_T UM, regNum rA, regNum rB, regNum rC){
+    if(UM->regs[rC]!= (regNum)0)
+        UM->regs[rA] = UM->regs[rB];
 }
 
 /* $rA gets the word at segment $rB at offset $rC */
-static inline void segLoad(UM_T UM, UMinstruction word){
-    ThreeRegs R = unpackThreeRegs(word);
-    UM->regs[R.rA]=UMSegs_getWord(UM->mem, UM->regs[R.rB], UM->regs[R.rC]); 
+static inline void segLoad(UM_T UM, regNum rA, regNum rB, regNum rC){
+    UM->regs[rA]=UMSegs_getWord(UM->mem, UM->regs[rB], UM->regs[rC]); 
 }
 
 /* Stores the value in $rC in segment $rA at offset $rB */
-static inline void segStore(UM_T UM, UMinstruction word){
-    ThreeRegs R = unpackThreeRegs(word);
-    UMSegs_putWord(UM->mem, UM->regs[R.rA], UM->regs[R.rB], UM->regs[R.rC]);
+static inline void segStore(UM_T UM, regNum rA, regNum rB, regNum rC){
+    UMSegs_putWord(UM->mem, UM->regs[rA], UM->regs[rB], UM->regs[rC]);
 }
 
 /* Stores the sum of $rB and %rC in $rA*/
-static inline void addition(UM_T UM, UMinstruction word){
-    ThreeRegs R = unpackThreeRegs(word);
-    UM->regs[R.rA] = (regVal)(UM->regs[R.rB] + UM->regs[R.rC]);
+static inline void addition(UM_T UM, regNum rA, regNum rB, regNum rC){
+    UM->regs[rA] = (regVal)(UM->regs[rB] + UM->regs[rC]);
 }
 
 /* Stores the product of $rB and $rC in $rA */
-static inline void multiplication(UM_T UM, UMinstruction word){
-    ThreeRegs R = unpackThreeRegs(word);
-    UM->regs[R.rA] = (regVal)(UM->regs[R.rB] * UM->regs[R.rC]);
+static inline void multiplication(UM_T UM, regNum rA, regNum rB, regNum rC){
+    UM->regs[rA] = (regVal)(UM->regs[rB] * UM->regs[rC]);
 }
 
 /* Stores the quotient of %rB and %rC in $rA */
-static inline void divide(UM_T UM, UMinstruction word){
-    ThreeRegs R = unpackThreeRegs(word);
-    UM->regs[R.rA] = (UMinstruction)(UM->regs[R.rB] / UM->regs[R.rC]);
+static inline void divide(UM_T UM, regNum rA, regNum rB, regNum rC){
+    UM->regs[rA] = (UMinstruction)(UM->regs[rB] / UM->regs[rC]);
 }
 
 /* Stores $rB NAND $rC in $rA */
-static inline void NAND(UM_T UM, UMinstruction word){
-    ThreeRegs R = unpackThreeRegs(word);
-    UM->regs[R.rA] = ~(UM->regs[R.rB] & UM->regs[R.rC]);
+static inline void NAND(UM_T UM, regNum rA, regNum rB, regNum rC){
+    UM->regs[rA] = ~(UM->regs[rB] & UM->regs[rC]);
 }
 
 /* Frees the segments held by the UM */
-static inline void halt(UM_T UM, UMinstruction word){
-    (void)word;
+static inline void halt(UM_T UM){
     UMSegs_free(&(UM->mem));
 }
 
 /* Maps the segment at offset $rC and stores the segID in $rB */
-static inline void mapSeg(UM_T UM, UMinstruction word){
-    ThreeRegs R = unpackThreeRegs(word);
-    UM->regs[R.rB] = UMSegs_mapSeg(UM->mem, UM->regs[R.rC]);
+static inline void mapSeg(UM_T UM, regNum rB, regNum rC){
+    UM->regs[rB] = UMSegs_mapSeg(UM->mem, UM->regs[rC]);
 }
 
 /* Unmaps segment %rC */
-static inline void unmapSeg(UM_T UM, UMinstruction word){
-    ThreeRegs R = unpackThreeRegs(word);
-    UMSegs_unmapSeg(UM->mem, UM->regs[R.rC]);
+static inline void unmapSeg(UM_T UM, regNum rC){
+    UMSegs_unmapSeg(UM->mem, UM->regs[rC]);
 }
 
 /* Prints the character stored in $rC */
-static inline void output(UM_T UM, UMinstruction word){
-    ThreeRegs R = unpackThreeRegs(word);
-    printf("%c", UM->regs[R.rC]);
+static inline void output(UM_T UM, regNum rC){
+    printf("%c", UM->regs[rC]);
 }
 
 /* $rC stores a character from input */
-static inline void input(UM_T UM, UMinstruction word){
-    ThreeRegs R = unpackThreeRegs(word);
+static inline void input(UM_T UM, regNum rC){
     char c = getc(stdin);
     if(c==EOF) 
-        UM->regs[R.rC] = ~((regVal)0);
+        UM->regs[rC] = ~((regVal)0);
     else
-        UM->regs[R.rC] = (regVal)c; 
+        UM->regs[rC] = (regVal)c; 
 }
 
 /* The program counter is set to $rC. If $rB != 0, segment 0 is replaced with 
@@ -130,14 +90,13 @@ static inline void input(UM_T UM, UMinstruction word){
  * INVARIANT: The SegID of the most recent unmapped segment is the SegID
  * returned for the next mapSeg call. 
  */
-static inline void loadPro(UM_T UM, UMinstruction word){
-    ThreeRegs R = unpackThreeRegs(word);
+static inline void loadPro(UM_T UM, regNum rB, regNum rC){
     segmentID segID;
     UMinstruction newWord;
     int length;
     
-    if(UM->regs[R.rB] != (regNum)0){
-        Seg_T newProg = UMSegs_getSeg(UM->mem, UM->regs[R.rB]);
+    if(UM->regs[rB] != (regNum)0){
+        Seg_T newProg = UMSegs_getSeg(UM->mem, UM->regs[rB]);
         UMSegs_unmapSeg(UM->mem, (segmentID)0);
         length = Seg_length(newProg);
         segID = UMSegs_mapSeg(UM->mem, length);
@@ -150,13 +109,12 @@ static inline void loadPro(UM_T UM, UMinstruction word){
         Seg_free(&(UM->seg0)); 
         UM->seg0 = UMSegs_getSeg(UM->mem, 0);
     }
-    UM->progCount = UM->regs[R.rC];
+    UM->progCount = UM->regs[rC];
 }
 
 /* Loads val parsed from the word and stores it in the determined reg */
-static inline void loadVal(UM_T UM, UMinstruction word){
-    RegAndVal V = unpackValue(word); 
-    UM->regs[V.rA] = V.val; 
+static inline void loadVal(UM_T UM, regNum rA, regVal val){
+    UM->regs[rA] = val; 
 }
 
 /* Creates a fully initialized UM. Assumes that *fp will not to be NULL. 
@@ -213,50 +171,50 @@ static T load(FILE *fp)
 }
 
 /* Carries out a single instruction  */
-static inline int instructionLoop(UM_T UM, enum OP opcode, UMinstruction
-        instruction) { 
+static inline int instructionLoop(UM_T UM, enum OP opcode, regNum rA, regNum rB,
+        regNum rC, regVal val) { 
         switch(opcode) {
             case cMov:
-                condMove(UM, instruction);
+                condMove(UM, rA, rB, rC);
                 break;
             case sLoad:
-                segLoad(UM, instruction);
+                segLoad(UM, rA, rB, rC);
                 break;
             case sStore:
-                segStore(UM, instruction);
+                segStore(UM, rA, rB, rC);
                 break;
             case add:
-                addition(UM, instruction);
+                addition(UM, rA, rB, rC);
                 break;
             case mult:
-                multiplication(UM, instruction);
+                multiplication(UM, rA, rB, rC);
                 break;
             case divi:
-                divide(UM, instruction);
+                divide(UM, rA, rB, rC);
                 break;
             case nand:
-                NAND(UM, instruction);
+                NAND(UM, rA, rB, rC);
                 break;
             case end:
-                halt(UM, instruction);
+                halt(UM);
                 break;
             case mapS:
-                mapSeg(UM, instruction);
+                mapSeg(UM, rB, rC);
                 break;
             case unmapS:
-                unmapSeg(UM, instruction);
+                unmapSeg(UM, rC);
                 break;
             case out:
-                output(UM, instruction);
+                output(UM, rC);
                 break;
             case in:
-                input(UM, instruction);
+                input(UM, rC);
                 break;
             case loadP:
-                loadPro(UM, instruction);
+                loadPro(UM, rB, rC);
                 break;
             case loadV:
-                loadVal(UM, instruction);
+                loadVal(UM, rA, val);
                 break;
             default:
                 exit(1);
@@ -273,11 +231,24 @@ static inline int instructionLoop(UM_T UM, enum OP opcode, UMinstruction
 void run(FILE *fp){
     UM_T UM = load(fp);
     UMinstruction instruction;
+    regVal val = 0;
+    regNum rA, rB, rC = 0;
     enum OP opcode;
     do {  
         instruction = Seg_get(UM->seg0, UM->progCount);
         opcode = (enum OP) ((instruction >> 28) & (uint32_t)15);
-    } while((enum OP)instructionLoop(UM, opcode, instruction) != end);
+        if(opcode == loadV) {
+            rA = (instruction >> 25) & (uint32_t)7;
+            val = instruction & (uint32_t)33554431;
+
+        }
+        else {
+        rA = (instruction >> 6) & (uint32_t)7;
+        rB = (instruction >> 3) & (uint32_t)7;
+        rC = instruction & (uint32_t)7;
+        }
+
+    } while((enum OP)instructionLoop(UM, opcode, rA, rB, rC, val) != end);
     FREE(UM);
 }
 
